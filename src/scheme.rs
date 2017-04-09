@@ -1,4 +1,5 @@
-use orbclient::{self, Color, Event, EventOption, KeyEvent, MouseEvent, ButtonEvent, FocusEvent, QuitEvent, MoveEvent, ResizeEvent, ScreenEvent, Renderer};
+use orbclient::{Color, Event, EventOption, KeyEvent, MouseEvent, ButtonEvent, FocusEvent, QuitEvent, MoveEvent, ResizeEvent, ScreenEvent, Renderer};
+use orbclient::keycode::*;
 use orbfont;
 use resize;
 use syscall;
@@ -402,27 +403,27 @@ impl OrbitalScheme {
     }
 
     fn key_event(&mut self, event: KeyEvent) {
-        if event.scancode == 0x38 {
+        if event.keycode == KC_ALT {
             self.win_key = event.pressed;
             // If the win key was released, stop drawing the win-tab window switcher
             if !self.win_key {
                 self.win_tabbing = false;
             }
         } else if self.win_key {
-            match event.scancode {
-                orbclient::K_ESC => if event.pressed {
+            match event.keycode {
+                KC_ESC => if event.pressed {
                     if let Some(id) = self.order.front() {
                         if let Some(mut window) = self.windows.get_mut(&id) {
                             window.event(QuitEvent.to_event());
                         }
                     }
                 },
-                orbclient::K_TAB => if event.pressed {
+                KC_TAB => if event.pressed {
                     // Start drawing the window switcher. It's drawn by redraw()
                     self.win_tabbing = true;
                     self.win_tab();
                 },
-                orbclient::K_BKSP => if event.pressed {
+                KC_BKSP => if event.pressed {
                     // Switch backgrounds
                     let bg_rect = self.background_rect();
                     schedule(&mut self.redraws, bg_rect);
@@ -435,17 +436,17 @@ impl OrbitalScheme {
                     let bg_rect = self.background_rect();
                     schedule(&mut self.redraws, bg_rect);
                 },
-                orbclient::K_UP | orbclient::K_DOWN | orbclient::K_LEFT | orbclient::K_RIGHT => if event.pressed {
+                KC_UP | KC_DOWN | KC_LEFT | KC_RIGHT => if event.pressed {
                     if let Some(id) = self.order.front() {
                         if let Some(mut window) = self.windows.get_mut(&id) {
                             schedule(&mut self.redraws, window.title_rect());
                             schedule(&mut self.redraws, window.rect());
 
-                            match event.scancode {
-                                orbclient::K_LEFT => window.x -= 1,
-                                orbclient::K_RIGHT => window.x += 1,
-                                orbclient::K_UP => window.y -= 1,
-                                orbclient::K_DOWN => window.y += 1,
+                            match event.keycode {
+                                KC_LEFT => window.x -= 1,
+                                KC_RIGHT => window.x += 1,
+                                KC_UP => window.y -= 1,
+                                KC_DOWN => window.y += 1,
                                 _ => ()
                             }
 
@@ -461,7 +462,7 @@ impl OrbitalScheme {
                     }
                 },
                 _ => if event.pressed {
-                    println!("WIN+{:X}", event.scancode);
+                    println!("WIN+{:X}", event.keycode);
                 }
             }
         } else if let Some(id) = self.order.front() {
